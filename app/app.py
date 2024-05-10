@@ -7,7 +7,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 
-from models import db
+from models import db, Product, Category
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -23,3 +23,105 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 api = Api(app)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+#Product Routes
+class ProductResource(Resource):
+    def get(self):
+        products = [product.serialize() for product in Product.query.all()]
+        return make_response(products, 200)
+    
+api.add_resource(ProductResource, '/product')
+
+#Product by name
+class ProductByName(Resource):
+    def get(self, name):
+        product = Product.query.filter_by(name=name).first()
+        if product is None:
+            return{"error": "Product not found"}, 404
+        response_dict = product.serialize()
+        return make_response(response_dict, 200)
+    
+api.add_resource(ProductByName, '/product/<string:name>')
+
+
+
+#product by category
+class ProductByCategory(Resource):
+    def get(self, category):
+        product = Product.query.filter_by(category=category).all()
+        if product is None:
+            return{"error": "Product not found"}, 404
+        response_dict = product.serialize()
+        return make_response(response_dict, 200)
+    
+api.add_resource(ProductByCategory, '/product/<string:category>')
+    
+    
+
+#product by id will mostly be used by the admin
+class ProductById(Resource):
+    def get(self, id):
+        product = Product.query.filter_by(id=id).first()
+        if product is None:
+            return{"error": "Product not found"}, 404
+        response_dict = product.serialize()
+        return make_response(response_dict, 200)
+    
+  
+    def delete(self, id):
+        product = Product.query.filter_by(id=id).first()
+        if product is None:
+            return{"error": "Product not found"}, 404
+        
+        product = Product.query.get_or_404(id)
+        db.session.delete(product)
+        db.session.commit()
+        return jsonify({'message': 'Product delete successfully'})
+    
+
+     
+
+    
+api.add_resource(ProductById, '/products/<int:id>')
+
+
+#Category routes
+class CategoryResource(Resource):
+    def get(self):
+        categories = [category.serialize() for category in Category.query.all()]
+        return make_response(categories, 200)
+    
+    
+    
+api.add_resource(CategoryResource, '/category')
+    
+
+#category by name
+class CategoryByName(Resource):
+    def get(self, name):
+        category = Category.query.filter_by(name=name).first()
+        if category is None:
+            return{"error": "Product not found"}, 404
+        response_dict = category.serialize()
+        return make_response(response_dict, 200)
+        
+    
+api.add_resource(CategoryByName, '/categories/<string:name>')
+
+
+
+
+
+
+
+
+
+
+
+#class BookResource(Resource):
+   # def get(self):
+      #  books = [book.to_dict() for book in Book.query.all()]
+      #  return make_response(books, 200)
+
+#api.add_resource(BookResource, '/books')
