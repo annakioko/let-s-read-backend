@@ -7,7 +7,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 
-from models import db, Product, Category
+from models import db, Product, Category, User
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -23,6 +23,45 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 api = Api(app)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+class LogIn(Resource):
+    def post(self):
+        data = request.get_json()
+        if not data:
+            return {"error": "Missing data in request"}, 400
+
+        username = data.get('username')
+        password = data.get('password')
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if not user:
+          return {"error": "User does not exist"}, 401
+        if not bcrypt.check_password_hash(user.password, password):
+           return {"error": "Incorrect password"}, 401
+        
+        access_token = create_access_token(identity={'id': username.id, 'role': username.role})
+        refresh_token = create_refresh_token(identity={'id': username.id, 'role': username.role})
+        return {"access_token": access_token, "refresh_token": refresh_token}, 200
+
+api.add_resource(LogIn, '/login')
+
+class TokenRefresh(Resource):
+    @jwt_required(refresh=True)
+    def post(self):
+        try:
+            current_user = get_jwt_identity()
+            access_token = create_access_token(identity=current_user)
+            return {'access_token': access_token}, 200
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+
+api.add_resource(TokenRefresh, '/refresh-token')
+
+
+
+
 
 
 #Product Routes

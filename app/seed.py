@@ -1,6 +1,6 @@
 from flask_bcrypt import Bcrypt
 from app import app
-from models import db, Category, Product
+from models import db, Category, Product, User
 
 bcrypt = Bcrypt(app)
 
@@ -8,8 +8,23 @@ def seed_data():
     # Delete existing data
     Category.query.delete()
     Product.query.delete()
+    User.query.delete()
 
-    # Create categories
+    # user seed
+    Users = [
+            User(username="Anna Kioko", email="anna@gmail.com", password=bcrypt.generate_password_hash("Annakioko.123").decode('utf-8'),  role='admin'),
+            User(username="Sharon Mwende", email="sharon@gmail.com", password=bcrypt.generate_password_hash("Sharonmwende.123").decode('utf-8'),  role='admin'),
+            User(username="James Mbuvi", email="james@gmail.com", password=bcrypt.generate_password_hash("Jamesmbuvi.123").decode('utf-8'),  role='user'),
+            User(username="Francis Ngigi", email="francis@gmail.com", password=bcrypt.generate_password_hash("francisngigi.123").decode('utf-8'),  role='user'),
+            User(username="Ian Kinuthia", email="ian@gmail.com", password=bcrypt.generate_password_hash("Iankinuthia.123").decode('utf-8'),  role='user')
+        ]
+    db.session.add_all(Users)
+    db.session.commit()    
+        
+
+
+
+    #  categories seed
     category_makeup = Category(name='Makeup')
     category_scents = Category(name='Scents')
     category_skincare = Category(name='Skincare')

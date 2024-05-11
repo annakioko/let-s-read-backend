@@ -8,6 +8,50 @@ from sqlalchemy import CheckConstraint
 db = SQLAlchemy()
 
 
+#define model
+
+#user model
+class User(db.Model):
+    __tablename__="users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String, nullable=False)
+    email = db.Column(db.String, nullable=False)
+    password = db.Column(db.String, nullable=False)
+    role = db.Column(db.String, nullable=False)
+    address = db.Column(db.String, nullable=True, default='N/A' )
+
+    @validates('role')
+    def validate_role(self, key, role):
+        if role != 'user' and role != 'admin':
+            raise ValueError("Invalid! User must be either user or admin.")
+        return role
+
+       
+    # email
+    @validates('email')
+    def validate_email(self, key, email):
+        assert '@' in email
+        assert re.match(r"[^@]+@[^@]+\.[^@]+", email), "Invalid email format"
+        return email
+    
+    # password
+    @validates('password')
+    def validate_password(self, key, password):
+        assert len(password) > 8
+        assert re.search(r"[A-Z]", password), "Password should contain at least one uppercase letter"
+        assert re.search(r"[a-z]", password), "Password should contain at least one lowercase letter"
+        assert re.search(r"[0-9]", password), "Password should contain at least one digit"
+        assert re.search(r"[!@#$%^&*(),.?\":{}|<>]", password), "Password should contain at least one special character"
+        return password
+
+    def __repr__(self):
+        return f"<User {self.id}, {self.username}, {self.email}, {self.password}, {self.role}, {self.address}>"
+
+
+
+
+
 #Product model
 class Product(db.Model, SerializerMixin):
     __tablename__ = 'products'
