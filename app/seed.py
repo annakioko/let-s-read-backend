@@ -1,6 +1,7 @@
 from flask_bcrypt import Bcrypt
 from app import app
-from models import db, Category, Product, User
+from models import db, Category, Product, User, Order, OrderItem
+from dateutil import parser as datetime_parser
 
 bcrypt = Bcrypt(app)
 
@@ -9,6 +10,8 @@ def seed_data():
     Category.query.delete()
     Product.query.delete()
     User.query.delete()
+    Order.query.delete()
+    OrderItem.query.delete()
 
     # user seed
     Users = [
@@ -26,11 +29,14 @@ def seed_data():
 
     #  categories seed
     category_makeup = Category(name='Makeup')
-    category_scents = Category(name='Scents')
+    category_Fragrances = Category(name='Fragrances')
     category_skincare = Category(name='Skincare')
+    category_haircare = Category(name='Haircare')
+    category_bathandbody = Category(name='Bathandbody')
+    category_giftssetsandkits = Category(name='Giftssetsandkits')
 
     # Add categories to session
-    db.session.add_all([category_makeup, category_scents, category_skincare])
+    db.session.add_all([category_makeup, category_Fragrances, category_skincare, category_haircare, category_bathandbody, category_giftssetsandkits])
     db.session.commit()
 
     # Create products
@@ -40,10 +46,10 @@ def seed_data():
         Product(name='radiant silk', gender='Woman', description='Silky smooth formula for flawless coverage and luminous complexion', price=1500, quantity_available=40, image='https://unsplash.com/photos/two-labeled-bottles-xBqYLnRhfaI', category=category_makeup),
         Product(name='golden glow', gender='Woman', description='Illuminating formula for a radiant, dewy complexion all day', price=500, quantity_available=40, image='https://unsplash.com/photos/white-petaled-flowers-on-top-of-conceleaer-bzBs0_g0lRo', category=category_makeup),
 
-        # Scents products
-        Product(name='enchanted elixir', gender='Woman', description='Enchanted Elixir: Captivating blend of florals and musk, evoking timeless elegance', price=4000.99, quantity_available=30, image='https://unsplash.com/photos/two-clear-glass-perfume-bottles-nka_sIQpKEU', category=category_scents),
-        Product(name='midnight legend', gender='Man', description='Description for Product 4', price=4500, quantity_available=20, image='https://unsplash.com/photos/calvin-klein-one-perfume-bottle-C1qrJ9i4EPc', category=category_scents),
-        Product(name='whispering petals', gender='Woman', description='Delicate floral notes intertwine for an enchanting, feminine aura', price=5000, quantity_available=20, image='https://unsplash.com/photos/pink-and-silver-perfume-bottle-M3PWXjCiRbQ', category=category_scents),
+        # Fragrances products
+        Product(name='enchanted elixir', gender='Woman', description='Enchanted Elixir: Captivating blend of florals and musk, evoking timeless elegance', price=4000.99, quantity_available=30, image='https://unsplash.com/photos/two-clear-glass-perfume-bottles-nka_sIQpKEU', category=category_Fragrances),
+        Product(name='midnight legend', gender='Man', description='Description for Product 4', price=4500, quantity_available=20, image='https://unsplash.com/photos/calvin-klein-one-perfume-bottle-C1qrJ9i4EPc', category=category_Fragrances),
+        Product(name='whispering petals', gender='Woman', description='Delicate floral notes intertwine for an enchanting, feminine aura', price=5000, quantity_available=20, image='https://unsplash.com/photos/pink-and-silver-perfume-bottle-M3PWXjCiRbQ', category=category_Fragrances),
 
         # Skincare products
         Product(name='i am fabulous', gender='Woman', description='Luxurious body oil, enhances radiance, nourishes, and revitalizes skin', price=1500, quantity_available=10, image='https://unsplash.com/photos/brown-glass-bottle-beside-box-WnVrO-DvxcE', category=category_skincare),
@@ -54,6 +60,9 @@ def seed_data():
     # Add products to session
     db.session.add_all(products)
     db.session.commit()
+
+
+
 
 if __name__ == '__main__':
     with app.app_context():

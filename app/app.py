@@ -7,7 +7,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 
-from models import db, Product, Category, User
+from models import db, Product, Category, User, Order, OrderItem
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -25,46 +25,54 @@ api = Api(app)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 
-class LogIn(Resource):
-    def post(self):
-        data = request.get_json()
-        if not data:
-            return {"error": "Missing data in request"}, 400
+#class LogIn(Resource):
+   # def post(self):
+      #  data = request.get_json()
+       # if not data:
+        #    return {"error": "Missing data in request"}, 400
 
-        username = data.get('username')
-        password = data.get('password')
+       # username = data.get('username')
+       # password = data.get('password')
         
-        user = User.query.filter_by(username=username).first()
+      #  user = User.query.filter_by(username=username).first()
         
-        if not user:
-          return {"error": "User does not exist"}, 401
-        if not bcrypt.check_password_hash(user.password, password):
-           return {"error": "Incorrect password"}, 401
+       # if not user:
+        #  return {"error": "User does not exist"}, 401
+      #  if not bcrypt.check_password_hash(user.password, password):
+       #    return {"error": "Incorrect password"}, 401
         
-        access_token = create_access_token(identity={'id': username.id, 'role': username.role})
-        refresh_token = create_refresh_token(identity={'id': username.id, 'role': username.role})
-        return {"access_token": access_token, "refresh_token": refresh_token}, 200
+      #  access_token = create_access_token(identity={'id': username.id, 'role': username.role})
+       # refresh_token = create_refresh_token(identity={'id': username.id, 'role': username.role})
+      #  return {"access_token": access_token, "refresh_token": refresh_token}, 200
 
-api.add_resource(LogIn, '/login')
+#api.add_resource(LogIn, '/login')
 
-class TokenRefresh(Resource):
-    @jwt_required(refresh=True)
-    def post(self):
-        try:
-            current_user = get_jwt_identity()
-            access_token = create_access_token(identity=current_user)
-            return {'access_token': access_token}, 200
-        except Exception as e:
-            return jsonify(error=str(e)), 500
+#class TokenRefresh(Resource):
+   # @jwt_required(refresh=True)
+   # def post(self):
+       # try:
+      #      current_user = get_jwt_identity()
+       #     access_token = create_access_token(identity=current_user)
+        #    return {'access_token': access_token}, 200
+        #except Exception as e:
+          #  return jsonify(error=str(e)), 500
 
-api.add_resource(TokenRefresh, '/refresh-token')
+#api.add_resource(TokenRefresh, '/refresh-token')
 
-
-
+#User routes
+class UserResource(Resource):
+    def get(self):
+       users = [user.serialize() for user in User.query.all()]
+       return make_response(users, 200)
+    
+    #def patch they should be able to edit their passwords and addresses and emails
+    
+api.add_resource(UserResource, '/user')
 
 
 
 #Product Routes
+#post route should be added but this is after the Jwt is added
 class ProductResource(Resource):
     def get(self):
         products = [product.serialize() for product in Product.query.all()]
@@ -88,7 +96,7 @@ api.add_resource(ProductByName, '/product/<string:name>')
 #product by category
 class ProductByCategory(Resource):
     def get(self, category):
-        product = Product.query.filter_by(category=category).all()
+        product = Product.query.filter_by(category_name=category).all()
         if product is None:
             return{"error": "Product not found"}, 404
         response_dict = product.serialize()
@@ -99,6 +107,7 @@ api.add_resource(ProductByCategory, '/product/<string:category>')
     
 
 #product by id will mostly be used by the admin
+#patch a 
 class ProductById(Resource):
     def get(self, id):
         product = Product.query.filter_by(id=id).first()
@@ -149,18 +158,45 @@ class CategoryByName(Resource):
 api.add_resource(CategoryByName, '/categories/<string:name>')
 
 
+class OrderResource(Resource):
+    def get(self):
+        orders = [order.serialize() for order in Order.query.all()]
+        return make_response(orders, 200)
+    
+api.add_resource(OrderResource, '/orders')
+
+
+class OrderById(Resource):
+    def get(self, id):
+        order = Order.query.filter_by(id=id).first()
+        if order is None:
+            return{"error": "order not found"}, 404
+        response_dict = order.serialize()
+        return make_response(response_dict, 200)
+    
+api.add_resource(OrderById, '/order/<int:id>')
+
+# this is for the add to cart
+class OrderItem(Resource):
+    def post(self):
+        pass
+
+
+api.add_resource(OrderItem, '/orderitem')
+
+
+#put route by id is for increasing and decreasing quantity
+class OrderItemById(Resource):
+    def patch(self, id):
+        pass
 
 
 
+    #delete is the remove from cart
+    def delete(self, id):
+        pass
 
 
+api.add_resource(OrderItemById, '/orderitem/<int:id>')
 
 
-
-
-#class BookResource(Resource):
-   # def get(self):
-      #  books = [book.to_dict() for book in Book.query.all()]
-      #  return make_response(books, 200)
-
-#api.add_resource(BookResource, '/books')
